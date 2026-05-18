@@ -1,0 +1,467 @@
+import React, { useState, useEffect } from 'react';
+import { Search, ChefHat, Sparkles, Clock, Heart, Star } from 'lucide-react';
+
+// ==========================================
+// 1. 食譜資料庫 (基於上傳的檔案內容萃取與擴充)
+// ==========================================
+const recipeDB = [
+  {
+    id: 1,
+    title: "台式經典肉燥飯",
+    cuisine: "台式",
+    meal: "午餐",
+    ingredients: ["豬絞肉 500g", "醬油 3大匙", "油蔥酥 1大把", "米酒 1大匙", "水 適量", "熱騰騰白飯 1大碗"],
+    steps: [
+      "鍋子熱油後，放入豬絞肉拌炒至變色泛白。",
+      "淋上醬油、米酒，瞬間炒出迷人的醬香。",
+      "加入靈魂配料『油蔥酥』均勻拌炒。",
+      "加水淹過食材，蓋上鍋蓋小火慢燉20分鐘。",
+      "將鹹香濃郁的肉燥淋在白飯上，大口享用！"
+    ],
+    icon: "🍚",
+    color: "bg-orange-100",
+    shadow: "shadow-orange-400"
+  },
+  {
+    id: 2,
+    title: "正宗韓式部隊鍋",
+    cuisine: "韓式",
+    meal: "晚餐",
+    ingredients: ["韓式老泡菜 1碗", "午餐肉 1罐", "熱狗 2根", "洋蔥 半顆", "韓國不倒翁泡麵 1包", "起司片 1片", "韓式辣醬 2大匙", "高湯 適量"],
+    steps: [
+      "洋蔥切絲鋪在鍋底，霸氣地放上酸辣泡菜。",
+      "午餐肉、熱狗切片，整齊排入鍋中成一圈。",
+      "加入韓式辣醬與高湯，開火煮滾。",
+      "放入靈魂泡麵煮至微軟Ｑ彈。",
+      "最後鋪上起司片，看著它慢慢融化就可以開動啦！"
+    ],
+    icon: "🥘",
+    color: "bg-red-100",
+    shadow: "shadow-red-400"
+  },
+  {
+    id: 3,
+    title: "泰式冬蔭功湯",
+    cuisine: "泰式",
+    meal: "晚餐",
+    ingredients: ["新鮮大白蝦 300g", "草菇 1把", "香茅 2根", "南薑 3片", "檸檬葉 4片", "小番茄 5顆", "冬蔭功醬 2大匙", "檸檬汁 1大匙"],
+    steps: [
+      "蝦子去殼，蝦頭一定要留下來備用！",
+      "鍋中少許油煸香蝦頭，加水熬出橘紅色的鮮蝦高湯後，將蝦頭撈除。",
+      "放入拍碎的香茅、南薑、揉碎的檸檬葉熬出東南亞香氣。",
+      "加入草菇、小番茄與冬蔭功醬煮滾。",
+      "放入鮮蝦煮熟，關火前淋上新鮮檸檬汁，酸辣鮮香完成！"
+    ],
+    icon: "🦐",
+    color: "bg-amber-100",
+    shadow: "shadow-amber-500"
+  },
+  {
+    id: 4,
+    title: "日式茶碗蒸",
+    cuisine: "日式",
+    meal: "午餐",
+    ingredients: ["雞蛋 2顆", "柴魚昆布高湯 300ml", "香菇 2朵", "雞肉丁 少量", "鮮蝦 2隻", "鹽巴 少許", "薄鹽醬油 1小匙"],
+    steps: [
+      "雞蛋輕輕打散（不要打出太多泡泡），加入放涼的柴魚高湯、鹽巴、醬油混合。",
+      "將蛋液用細網篩『過篩』，這是口感滑嫩的秘密！",
+      "蒸碗底放入香菇、雞肉丁、鮮蝦。",
+      "倒入過篩後的無暇蛋液。",
+      "放入電鍋，鍋蓋夾一根筷子留縫隙，蒸12-15分鐘即可。"
+    ],
+    icon: "🍮",
+    color: "bg-yellow-100",
+    shadow: "shadow-yellow-400"
+  },
+  {
+    id: 5,
+    title: "廣式生滾魚片粥",
+    cuisine: "中式",
+    meal: "早餐",
+    ingredients: ["白米 半杯", "水 4杯", "新鮮無刺魚片 150g", "薑絲 適量", "蔥花 適量", "白胡椒粉 少許", "鹽巴 適量"],
+    steps: [
+      "白米洗淨，加少許油拌勻，加水熬煮成綿不見米的白粥。",
+      "魚片切薄片，用少許鹽巴、米酒和太白粉抓醃。",
+      "白粥大火煮滾後，加入薑絲。",
+      "迅速放入魚片攪散，關火！用粥的餘溫將魚片『生滾』悶熟。",
+      "撒上蔥花與白胡椒粉，暖胃早餐完成。"
+    ],
+    icon: "🥣",
+    color: "bg-blue-100",
+    shadow: "shadow-blue-400"
+  },
+  {
+    id: 6,
+    title: "泰式芒果糯米飯",
+    cuisine: "泰式",
+    meal: "下午茶",
+    ingredients: ["長糯米 1杯", "香甜愛文芒果 1顆", "濃椰奶 150ml", "白砂糖 2大匙", "鹽巴 半小匙", "炸綠豆仁 少許 (裝飾)"],
+    steps: [
+      "糯米泡水4小時以上，瀝乾後蒸熟至Ｑ彈。",
+      "椰奶加入砂糖、鹽巴，微火煮至糖融化即可（勿煮滾）。",
+      "將一半的甜椰奶拌入剛蒸好的熱糯米飯中，蓋上布悶15分鐘吸滿精華。",
+      "芒果切下飽滿的果肉排在盤中，旁邊放上椰香糯米飯。",
+      "淋上剩餘的椰奶醬，撒上脆脆的炸綠豆仁，完美！"
+    ],
+    icon: "🥭",
+    color: "bg-green-100",
+    shadow: "shadow-green-500"
+  },
+  {
+    id: 7,
+    title: "深夜乾炒牛河",
+    cuisine: "中式",
+    meal: "宵夜",
+    ingredients: ["沙河粉 200g", "嫩牛肉片 100g", "豆芽菜 1大把", "韭黃 少量", "生抽(醬油) 1大匙", "老抽 半大匙(上色用)"],
+    steps: [
+      "牛肉片用少許生抽、糖和太白粉醃製15分鐘。",
+      "熱鍋冷油，將牛肉快速過油炒至八分熟撈起備用。",
+      "鍋中留底油，大火放入豆芽菜與河粉快速翻炒。",
+      "加入生抽、老抽翻炒均勻上色，炒出迷人的『鑊氣』。",
+      "加入牛肉與切段的韭黃拌勻，香噴噴出鍋！"
+    ],
+    icon: "🍜",
+    color: "bg-orange-200",
+    shadow: "shadow-orange-600"
+  },
+  {
+    id: 8,
+    title: "日式涼麵",
+    cuisine: "日式",
+    meal: "午餐",
+    ingredients: ["日式拉麵或素麵 1人份", "小黃瓜絲 適量", "蛋皮絲 適量", "火腿絲 適量", "日式鰹魚醬油 2大匙", "白芝麻 少許"],
+    steps: [
+      "將麵條放入滾水中煮熟。",
+      "撈起後立刻放入『冰水』中冰鎮，洗去表面黏液，讓麵條Ｑ彈。",
+      "小黃瓜、煎好的蛋皮、火腿切成細絲。",
+      "將麵條盛盤，鋪上色彩繽紛的三絲。",
+      "淋上日式鰹魚醬油，撒上白芝麻，清爽開動！"
+    ],
+    icon: "🥢",
+    color: "bg-teal-100",
+    shadow: "shadow-teal-500"
+  },
+  {
+    id: 9,
+    title: "韓式麻藥飯捲",
+    cuisine: "韓式",
+    meal: "早餐",
+    ingredients: ["熱白飯 1碗", "韓國海苔 數片", "醃黃蘿蔔條", "紅蘿蔔絲", "菠菜段", "麻油 1大匙", "芝麻 適量"],
+    steps: [
+      "熱白飯拌入麻油、少許鹽巴和白芝麻。",
+      "紅蘿蔔絲炒軟、菠菜川燙後擠乾水分拌點香油。",
+      "韓國海苔剪成四分之一大小。",
+      "鋪上一層薄薄的飯，放上黃蘿蔔、紅蘿蔔絲、菠菜。",
+      "捲成一口大小的迷你尺寸，好吃到像中毒一樣停不下來！"
+    ],
+    icon: "🍙",
+    color: "bg-purple-100",
+    shadow: "shadow-purple-400"
+  },
+  {
+    id: 10,
+    title: "台式熱炒鹹酥蝦",
+    cuisine: "台式",
+    meal: "宵夜",
+    ingredients: ["白蝦 300g", "蒜末 大量", "蔥花 適量", "辣椒末 少許", "白胡椒鹽 1大匙", "地瓜粉 適量"],
+    steps: [
+      "蝦子剪去鬚足，開背去腸泥，洗淨擦乾水分。",
+      "蝦子表面薄薄裹上一層地瓜粉。",
+      "起油鍋，將蝦子炸或半煎炸至金黃酥脆後撈起。",
+      "倒出多餘油脂，原鍋爆香蒜末、蔥花與辣椒。",
+      "倒入蝦子，撒上靈魂白胡椒鹽，大火快速翻炒均勻即可！"
+    ],
+    icon: "🍤",
+    color: "bg-rose-100",
+    shadow: "shadow-rose-400"
+  }
+];
+
+// ==========================================
+// 2. 主程式元件
+// ==========================================
+export default function App() {
+  // Feature 1 States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedRecipe, setGeneratedRecipe] = useState(null);
+
+  // --- Feature 1: 生成食譜邏輯 ---
+  const handleGenerateRecipe = async () => {
+    if (!searchQuery.trim()) return;
+    
+    setIsGenerating(true);
+    setGeneratedRecipe(null);
+
+    // 1. 先從資料庫尋找有沒有相近的菜色
+    const foundRecipe = recipeDB.find(r => r.title.includes(searchQuery) || searchQuery.includes(r.title));
+    
+    if (foundRecipe) {
+      setGeneratedRecipe(foundRecipe);
+      setIsGenerating(false);
+    } else {
+      // 2. 如果找不到，呼叫 API 生成真實的食譜
+      try {
+        const apiKey = "";
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+        const payload = {
+          contents: [{ parts: [{ text: `請提供「${searchQuery}」的真實食譜，包含具體的食材與份量，以及真實的烹飪流程（如火候、燉炒細節等）。` }] }],
+          systemInstruction: { parts: [{ text: "你是一位專業廚師。請回傳真實的食譜。不要有任何虛幻或魔法的字眼。" }] },
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "OBJECT",
+              properties: {
+                ingredients: { type: "ARRAY", items: { type: "STRING" }, description: "真實的食材與份量" },
+                steps: { type: "ARRAY", items: { type: "STRING" }, description: "真實的烹飪步驟與火候控制" }
+              }
+            }
+          }
+        };
+
+        const delay = (ms) => new Promise(res => setTimeout(res, ms));
+        const backoffs = [1000, 2000, 4000, 8000, 16000];
+        let recipeData = null;
+
+        for (let i = 0; i <= backoffs.length; i++) {
+          try {
+            const res = await fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error("API Error");
+            const data = await res.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) {
+              recipeData = JSON.parse(text);
+              break;
+            }
+          } catch (e) {
+            if (i === backoffs.length) throw e;
+            await delay(backoffs[i]);
+          }
+        }
+
+        if (recipeData) {
+          setGeneratedRecipe({
+            id: Date.now(),
+            title: `特製 ${searchQuery}`,
+            cuisine: "專屬特製",
+            meal: "隨時隨地",
+            ingredients: recipeData.ingredients,
+            steps: recipeData.steps,
+            icon: "🍳",
+            color: "bg-orange-100",
+            shadow: "shadow-orange-400"
+          });
+        }
+      } catch (error) {
+        console.error("Recipe generation failed:", error);
+        // 備用方案：當 API 發生錯誤時提供真實且通用的料理流程
+        setGeneratedRecipe({
+          id: Date.now(),
+          title: `特製 ${searchQuery}`,
+          cuisine: "專屬特製",
+          meal: "隨時隨地",
+          ingredients: [
+            `${searchQuery} 的主要食材 300g`,
+            "蔥段 2 支、薑片 3 片、蒜末 1 大匙",
+            "食用油 2 大匙",
+            "醬油 1.5 大匙、米酒 1 大匙",
+            "鹽巴 半小匙、白胡椒粉 少許"
+          ],
+          steps: [
+            "【備料】將所有食材清洗乾淨，肉類或主食切成適當大小，辛香料切好備用。",
+            "【熱鍋】開中火將鍋子燒熱，倒入食用油，放入蔥段、薑片與蒜末爆香，直到散發香氣。",
+            "【拌炒】轉大火，將主食材下鍋快速翻炒，讓表面接觸熱油，鎖住水分與甜味。",
+            "【調味】沿著鍋邊熗入米酒與醬油，產生鑊氣，接著加入少許水，蓋上鍋蓋轉小火悶煮 3-5 分鐘。",
+            "【收汁】打開鍋蓋，轉大火翻炒收汁，最後撒上鹽巴與白胡椒粉調味即可起鍋！"
+          ],
+          icon: "🍳",
+          color: "bg-orange-100",
+          shadow: "shadow-orange-400"
+        });
+      } finally {
+        setIsGenerating(false);
+      }
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#FFFDF5] text-gray-800 selection:bg-orange-300" style={{ fontFamily: "'Zen Maru Gothic', 'Yuanti TC', sans-serif" }}>
+      {/* 載入日式圓體 Google Font */}
+      <style>
+        {`@import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap');`}
+      </style>
+
+      {/* 頂部導覽列 */}
+      <header className="bg-[#FFC857] border-b-8 border-gray-800 py-6 px-4 md:px-8 flex flex-col md:flex-row items-center justify-center relative overflow-hidden">
+        {/* 背景小插畫 */}
+        <div className="absolute top-2 left-4 text-4xl opacity-20">🍳</div>
+        <div className="absolute bottom-2 right-10 text-4xl opacity-20">🥦</div>
+        <div className="absolute top-6 right-1/4 text-3xl opacity-20">🍙</div>
+        
+        <div className="flex items-center gap-3 z-10">
+          <ChefHat size={40} strokeWidth={2.5} className="text-gray-800" />
+          <h1 className="text-3xl md:text-4xl font-black tracking-wider text-gray-800 drop-shadow-[2px_2px_0px_#fff]">
+            今天想吃啥？
+          </h1>
+        </div>
+      </header>
+
+      {/* 主要內容區 */}
+      <main className="max-w-6xl mx-auto p-4 md:p-8">
+        
+        {/* =========================================
+            功能一：魔法食譜生成器 (輸入菜色)
+            ========================================= */}
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="bg-white border-4 border-gray-800 rounded-3xl p-6 md:p-10 shadow-[8px_8px_0px_#E9724C] text-center max-w-3xl mx-auto relative">
+            
+            <div className="absolute -bottom-6 -right-6 text-6xl transform rotate-12">🍅</div>
+
+            <h2 className="text-2xl md:text-3xl font-black mb-4">今天想吃點什麼呢？</h2>
+            <p className="text-gray-500 mb-8 font-medium">輸入您想做的菜色名稱，我們為您準備食材與步驟！</p>
+            
+            <div className="flex flex-col md:flex-row gap-4 justify-center">
+              <div className="relative w-full md:w-2/3">
+                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                  <Search className="text-gray-400" size={24} strokeWidth={3} />
+                </div>
+                <input 
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleGenerateRecipe()}
+                  placeholder="例如：韓式部隊鍋、三杯雞..."
+                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border-4 border-gray-800 rounded-2xl text-xl font-bold focus:outline-none focus:ring-4 focus:ring-[#FFC857] transition-all"
+                />
+              </div>
+              <button 
+                onClick={handleGenerateRecipe}
+                disabled={isGenerating || !searchQuery.trim()}
+                className="bg-[#E9724C] text-white border-4 border-gray-800 rounded-2xl px-8 py-4 font-black text-xl hover:bg-[#d65f3a] active:translate-y-2 active:shadow-none shadow-[4px_4px_0px_#1f2937] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isGenerating ? <Clock className="animate-spin" size={24} /> : <Sparkles size={24} />}
+                變出食譜！
+              </button>
+            </div>
+          </div>
+
+          {/* 生成結果展示 */}
+          {isGenerating && (
+            <div className="mt-12 text-center flex flex-col items-center">
+              <div className="text-6xl animate-bounce mb-4">🍳</div>
+              <h3 className="text-2xl font-bold text-gray-700">正在為您撰寫食譜...</h3>
+            </div>
+          )}
+
+          {!isGenerating && generatedRecipe && (
+            <div className="mt-12 animate-in zoom-in duration-500">
+              <RecipeCard recipe={generatedRecipe} isExpanded={true} />
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* 頁尾版權與社群連結 */}
+      <footer className="py-8 text-center font-bold text-gray-500">
+        <p>@2026 AnBin玩食生活</p>
+        <p className="mt-2">
+          Instagram <a href="https://www.instagram.com/anbintrip" target="_blank" rel="noopener noreferrer" className="text-[#E9724C] hover:text-[#d65f3a] underline decoration-2 underline-offset-4 transition-colors">anbintrip</a>
+        </p>
+      </footer>
+    </div>
+  );
+}
+
+// ==========================================
+// 共用元件：食譜卡片 (Q版手繪風)
+// ==========================================
+function RecipeCard({ recipe, isExpanded = false }) {
+  const [open, setOpen] = useState(isExpanded);
+
+  // 根據展開狀態調整卡片樣式
+  return (
+    <div className={`relative ${recipe.color} border-4 border-gray-800 rounded-3xl p-6 transition-all duration-300 ${open ? `shadow-[8px_8px_0px_#1f2937]` : `shadow-[4px_4px_0px_#1f2937] hover:-translate-y-2 hover:shadow-[8px_8px_0px_#1f2937] cursor-pointer`}`}
+         onClick={() => !open && setOpen(true)}>
+      
+      {/* 裝飾性圖標 */}
+      <div className="absolute -top-5 -right-5 w-16 h-16 bg-white border-4 border-gray-800 rounded-full flex items-center justify-center text-3xl shadow-[2px_2px_0px_#1f2937] transform rotate-12 z-10">
+        {recipe.icon}
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-4">
+        <span className="bg-white border-2 border-gray-800 px-3 py-1 rounded-full text-sm font-bold shadow-[2px_2px_0px_#1f2937]">
+          {recipe.cuisine}
+        </span>
+        <span className="bg-white border-2 border-gray-800 px-3 py-1 rounded-full text-sm font-bold shadow-[2px_2px_0px_#1f2937]">
+          {recipe.meal}
+        </span>
+      </div>
+
+      <h3 className="text-2xl font-black mb-2 text-gray-900 leading-tight">
+        {recipe.title}
+      </h3>
+
+      {!open && (
+        <p className="text-gray-700 font-bold mt-4 flex items-center gap-2">
+          <Sparkles size={18} /> 點擊查看美味秘訣
+        </p>
+      )}
+
+      {/* 展開後的內容 */}
+      {open && (
+        <div className="mt-6 space-y-6 animate-in fade-in duration-300">
+          
+          {/* 食材準備 */}
+          <div className="bg-white/60 border-2 border-gray-800 rounded-2xl p-4 relative">
+            <h4 className="text-lg font-black flex items-center gap-2 mb-3 bg-white inline-block px-3 py-1 border-2 border-gray-800 rounded-lg shadow-[2px_2px_0px_#1f2937] -mt-8">
+              <Heart size={18} className="text-red-500 fill-current"/> 食材準備
+            </h4>
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+              {recipe.ingredients.map((ing, idx) => (
+                <li key={idx} className="flex items-center gap-2 font-bold text-gray-700">
+                  <Star size={14} className="text-yellow-500 fill-current flex-shrink-0" />
+                  {ing}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* 製作步驟 */}
+          <div className="bg-white/60 border-2 border-gray-800 rounded-2xl p-4 relative mt-8">
+             <h4 className="text-lg font-black flex items-center gap-2 mb-3 bg-white inline-block px-3 py-1 border-2 border-gray-800 rounded-lg shadow-[2px_2px_0px_#1f2937] -mt-8">
+              <ChefHat size={18} className="text-blue-500" /> 製作步驟
+            </h4>
+            <div className="space-y-4 mt-2">
+              {recipe.steps.map((step, idx) => (
+                <div key={idx} className="flex gap-3 items-start">
+                  <div className="w-8 h-8 flex-shrink-0 bg-gray-800 text-white font-black rounded-full flex items-center justify-center border-2 border-transparent">
+                    {idx + 1}
+                  </div>
+                  <p className="font-bold text-gray-800 leading-relaxed pt-1">
+                    {step}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {!isExpanded && (
+            <div className="text-center mt-4">
+              <button 
+                onClick={(e) => { e.stopPropagation(); setOpen(false); }}
+                className="text-gray-500 hover:text-gray-800 font-bold underline decoration-2 underline-offset-4"
+              >
+                收起食譜
+              </button>
+            </div>
+          )}
+
+        </div>
+      )}
+    </div>
+  );
+}
